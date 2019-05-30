@@ -2,16 +2,16 @@
 import sys
 import csv
 
-def convert(bcpdata, lineterminator='*@@*', delimiter='@**@', quote='"', newdelimiter=',', escapechar='\\', newline='\n'):
+
+def convert(bcpdata):
     """
     returns data from a string of BCP data. Default is to present as CSV data.
     """
-    bcpdata = bcpdata.replace(escapechar, escapechar + escapechar)
-    bcpdata = bcpdata.replace(quote, escapechar + quote)
-    bcpdata = bcpdata.replace(delimiter, quote + newdelimiter + quote)
-    bcpdata = bcpdata.replace(lineterminator, quote + newline + quote)
-    bcpdata = quote + bcpdata + quote
-    return bcpdata
+    body = ''.join(
+        s.replace('"', '`').replace('@**@', '","').replace('\n', ' | ').replace('*@@*', '"\n"').replace('\x00', '').replace('  ', '').replace(' "', '"')
+        for s in bcpdata.splitlines())
+    return f'"{body[:-1]}'
+
 
 def stream(file, lineterminator='*@@*', delimiter='@**@', encoding='utf-8'):
     """
@@ -57,6 +57,7 @@ def stream(file, lineterminator='*@@*', delimiter='@**@', encoding='utf-8'):
     
     yield fields
 
+
 def main():
 
     # get arguments
@@ -84,6 +85,7 @@ def main():
                 writer = csv.writer(csvfile)
                 for bcpfields in stream(bcpfile):
                     writer.writerow(bcpfields)
+
 
 if __name__ == '__main__':
     main()
